@@ -4,8 +4,8 @@ import com.biodiversidad.backend.domain.model.User;
 import com.biodiversidad.backend.domain.port.in.UserService;
 import com.biodiversidad.backend.infrastructure.controller.UserController;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import java.util.Arrays;
 import java.util.List;
@@ -44,4 +44,61 @@ class UserControllerTest {
         ResponseEntity<User> response = controller.getUserById("1");
         assertEquals(404, response.getStatusCode().value());
     }
+    
+    @DisplayName("Test createUser con validacion de usuario")
+    @Test
+    void testCreateUser() {
+    	// Mock al servicio UserService
+		UserService userService = mock(UserService.class);
+		UserController controller = new UserController(userService);
+		User user = new User();
+		when(userService.createUser(user)).thenReturn(user);
+		
+		// Llamada al método createUser del controlador
+		ResponseEntity<User> response = controller.createUser(user);
+		assertEquals(201, response.getStatusCode().value());
+		assertEquals(user, response.getBody());
+	}
+    
+    @DisplayName("Test updateUser con validacion de usuario")
+    @Test
+    void testUpdateUser() {
+    	// Mock al servicio UserService
+		UserService userService = mock(UserService.class);
+		UserController controller = new UserController(userService);
+		User user = new User();
+		when(userService.updateUser("1", user)).thenReturn(user);
+		
+		// Llamada al método updateUser del controlador
+		ResponseEntity<User> response = controller.updateUser("1", user);
+		assertEquals(200, response.getStatusCode().value());
+		assertEquals(user, response.getBody());
+	}
+    
+    @DisplayName("Test updateUser con validacion de usuario no encontrado")
+    @Test
+    void testUpdateUserNotFound() {
+		// Mock al servicio UserService
+    	UserService userService = mock(UserService.class);
+    	UserController controller = new UserController(userService);
+    	User user = new User();
+    	when(userService.updateUser("1", user)).thenReturn(null);
+    	
+    	// La llamada al método updateUser del controlador
+    	ResponseEntity<User> response = controller.updateUser("1", user);
+    	assertEquals(404, response.getStatusCode().value());
+    }
+    
+    @DisplayName("Test deleteUser con validacion de usuario")
+    @Test
+    void testDeleteUser() {
+    	// Mock al servicio UserService
+		UserService userService = mock(UserService.class);
+		UserController controller = new UserController(userService);
+		doNothing().when(userService).deleteUser("1");
+		
+		// Llamada al método deleteUser del controlador
+		ResponseEntity<Void> response = controller.deleteUser("1");
+		assertEquals(204, response.getStatusCode().value());
+	}
 }
