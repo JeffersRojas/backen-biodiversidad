@@ -1,1 +1,41 @@
+# Maven
 /target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Eclipse
+.project
+.classpath
+.settings/
+.factorypath
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+
+# VS Code
+.vscode/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de log
+*.log
+
+# Archivos de configuración sensibles
+application-*.properties
+
+# Archivos de prueba generados
+/test-classes/
+
+# Archivos de construcción
+/build/
+
+# Otros
+*.swp
+*.swo
+.settings/org.eclipse.jdt.core.prefs
+.project
+.classpath
