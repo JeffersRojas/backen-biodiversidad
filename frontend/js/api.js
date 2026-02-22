@@ -141,7 +141,6 @@ class ApiService {
             throw error;
         }
     }
-
     // Flora API
     static async getAllFlora() {
         try {
@@ -202,4 +201,5 @@ class ApiService {
             throw error;
         }
     }
+
 }
