@@ -15,6 +15,7 @@ import java.util.Optional;
  */
 interface UserMongoSpringRepository extends MongoRepository<User, String> {
     Optional<User> findByEmail(String email);
+    Optional<User> findByUsername(String username);
 }
 
 /**
@@ -34,6 +35,11 @@ public class UserMongoAdapter implements UserRepository {
     @Override
     public Optional<User> findByEmail(String email) {
         return userMongoSpringRepository.findByEmail(email);
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return userMongoSpringRepository.findByUsername(username);
     }
 
     @Override

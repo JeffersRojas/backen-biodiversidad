@@ -9,12 +9,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Interfaz de Spring Data MongoDB para operaciones CRUD de Usuario.
- * Spring Data genera automáticamente la implementación.
- */
 interface UserMongoSpringRepository extends MongoRepository<User, String> {
     Optional<User> findByEmail(String email);
+    Optional<User> findByUsername(String username);
 }
 
 /**
@@ -34,6 +31,11 @@ public class UserMongoAdapter implements UserRepository {
     @Override
     public Optional<User> findByEmail(String email) {
         return userMongoSpringRepository.findByEmail(email);
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return userMongoSpringRepository.findByUsername(username);
     }
 
     @Override

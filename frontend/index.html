@@ -1,192 +1,496 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-CO">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biodiversidad Colombia - Gestión</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#166534" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="BioColombia - Aplicación Web Progresiva (PWA) para monitoreo y registro de biodiversidad en zonas rurales y sin conectividad de Colombia. Offline-First con IndexedDB y Service Worker.">
+    <meta name="keywords" content="biodiversidad, Colombia, PWA, offline, monitoreo, especies, fauna, flora, campo, biología">
+    <meta name="author" content="Jefferson Rojas - Uniminuto">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="BioColombia">
+    <meta property="og:title" content="BioColombia | Monitoreo de Biodiversidad">
+    <meta property="og:description" content="Aplicación PWA Offline-First para el registro y monitoreo de biodiversidad en campo en Colombia.">
+    <meta property="og:locale" content="es_CO">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="BioColombia | Monitoreo de Biodiversidad">
+    <meta name="twitter:description" content="PWA Offline-First para registro de especies en campo.">
+    <meta name="apple-mobile-web-app-title" content="BioColombia">
+    <meta name="application-name" content="BioColombia">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23166534'/><path d='M32 6c-11 19-22 25-22 36 0 9 7 14 16 14 4 0 7-2 7-7 0-9-13-9-13-20 0-6 5-10 12-10 7 0 12 4 12 11 0 6-4 10-10 11-4 0-7-2-7-5' fill='%234ade80'/></svg>">
+    <title>BioColombia | Monitoreo de Biodiversidad</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    
-    <!-- Auth View -->
-    <div id="auth-view">
-        <div class="form-card">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <i class="fas fa-leaf" style="font-size: 3rem; color: var(--primary-color);"></i>
-            </div>
-            <h2 id="auth-title">Bienvenido</h2>
-            <form id="auth-form">
-                <div class="form-group" id="email-group" style="display: none;">
-                    <label for="email">Correo Electrónico</label>
-                    <input type="email" id="email" placeholder="ejemplo@email.com">
-                </div>
-                <div class="form-group">
-                    <label for="username">Usuario</label>
-                    <input type="text" id="username" required placeholder="Nombre de usuario">
-                </div>
-                <div class="form-group">
-                    <label for="password">Contraseña</label>
-                    <input type="password" id="password" required placeholder="******">
-                </div>
-                <div class="form-group" id="role-group" style="display: none;">
-                    <label for="roleId">Rol</label>
-                    <select id="roleId">
-                        <option value="user">Usuario</option>
-                        <option value="admin">Administrador</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-primary" id="submit-btn">Entrar</button>
-                <p class="toggle-link" id="toggle-auth">¿No tienes cuenta? Regístrate aquí</p>
-            </form>
+
+<div id="app">
+
+  <!-- LOGIN VIEW -->
+  <section id="view-login" class="view auth-view">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <svg viewBox="0 0 120 120" width="90" height="90" aria-hidden="true">
+          <rect width="120" height="120" rx="30" fill="#166534"/>
+          <path d="M60 8c-22 36-44 50-44 72 0 18 14 28 32 28 9 0 14-5 14-13 0-18-26-18-26-39 0-12 10-20 24-20 14 0 24 8 24 20 0 12-8 19-22 21-8 1-14-3-14-9" fill="#4ade80"/>
+          <path d="M60 34c-14 0-24 8-24 22 0 18 26 18 26 38 0 10-8 15-20 15-18 0-32-9-32-28 0-21 26-38 50-75" fill="#22c55e" opacity="0.9"/>
+        </svg>
+      </div>
+      <h1 class="auth-title">BioColombia</h1>
+      <p class="auth-subtitle">Monitoreo de Biodiversidad</p>
+      <div id="login-network-badge" class="network-badge offline">
+        <span class="dot"></span>
+        <span class="network-text">Sin conexión</span>
+      </div>
+      <form id="form-auth" class="auth-form" novalidate>
+        <div class="field">
+          <label for="auth-username">Usuario</label>
+          <input type="text" id="auth-username" autocomplete="username" inputmode="text" placeholder="Ej: Administrador" required>
         </div>
-    </div>
-
-    <!-- Dashboard View -->
-    <div id="dashboard-view" class="dashboard-container hidden">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <i class="fas fa-globe-americas"></i> BioColombia
-            </div>
-            <nav class="sidebar-nav">
-                <div class="nav-item active" onclick="switchTab('fauna')">
-                    <i class="fas fa-paw"></i> Fauna
-                </div>
-                <div class="nav-item" onclick="switchTab('flora')">
-                    <i class="fas fa-seedling"></i> Flora
-                </div>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="nav-item" onclick="logout()" style="color: #ffcccb;">
-                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                </div>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Top Bar -->
-            <header class="top-bar">
-                <div id="page-title" style="font-weight: bold; font-size: 1.2rem;">Panel de Control</div>
-                <div class="user-info" id="user-info-display">
-                    <!-- Populated by JS -->
-                </div>
-            </header>
-
-            <!-- Fauna Section -->
-            <section id="fauna-section">
-                <div class="section-header">
-                    <h2>Gestión de Fauna</h2>
-                    <button id="add-fauna-btn" class="btn-add"><i class="fas fa-plus"></i> Nueva Especie</button>
-                </div>
-                <div id="fauna-list" class="grid-container">
-                    <!-- Fauna Cards -->
-                    <p>Cargando especies...</p>
-                </div>
-            </section>
-
-            <!-- Flora Section -->
-            <section id="flora-section" class="hidden">
-                <div class="section-header">
-                    <h2>Gestión de Flora</h2>
-                    <button id="add-flora-btn" class="btn-add"><i class="fas fa-plus"></i> Nueva Planta</button>
-                </div>
-                <div id="flora-list" class="grid-container">
-                    <!-- Flora Cards -->
-                    <p>Cargando flora...</p>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- Fauna Modal -->
-    <div id="fauna-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('fauna-modal')">&times;</span>
-            <h2 id="fauna-modal-title">Registrar Especie</h2>
-            <form id="fauna-form">
-                <input type="hidden" id="fauna-id">
-                <div class="form-group">
-                    <label for="fauna-nombreComun">Nombre Común</label>
-                    <input type="text" id="fauna-nombreComun" required placeholder="Ej: Jaguar">
-                </div>
-                <div class="form-group">
-                    <label for="fauna-nombreCientifico">Nombre Científico</label>
-                    <input type="text" id="fauna-nombreCientifico" required placeholder="Ej: Panthera onca">
-                </div>
-                <div class="form-group">
-                    <label for="fauna-familia">Familia</label>
-                    <input type="text" id="fauna-familia" required placeholder="Ej: Felidae">
-                </div>
-                <div class="form-group">
-                    <label for="fauna-habitat">Hábitat</label>
-                    <input type="text" id="fauna-habitat" required placeholder="Ej: Bosques tropicales">
-                </div>
-                <div class="form-group">
-                    <label for="fauna-ubicacionGeografica">Ubicación Geográfica</label>
-                    <input type="text" id="fauna-ubicacionGeografica" required placeholder="Ej: Amazonía">
-                </div>
-                <div class="form-group">
-                    <label for="fauna-peligroExtincion">Estado de Conservación</label>
-                    <select id="fauna-peligroExtincion">
-                        <option value="No">Preocupación Menor</option>
-                        <option value="Vulnerable">Vulnerable</option>
-                        <option value="En Peligro">En Peligro</option>
-                        <option value="Critico">En Peligro Crítico</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-primary">Guardar</button>
-            </form>
+        <div class="field">
+          <label for="auth-password">Contraseña</label>
+          <input type="password" id="auth-password" autocomplete="current-password" placeholder="••••••••" required>
         </div>
+        <button type="submit" id="btn-auth-submit" class="btn-primary btn-large btn-block">
+          <span id="btn-auth-text">Iniciar Sesión</span>
+          <span id="btn-auth-loader" class="loader hidden"></span>
+        </button>
+        <div id="auth-error" class="alert-error hidden" role="alert"></div>
+        <p class="auth-hint">Usuarios demo: <strong>Administrador / Administrador</strong> · <strong>Cliente / Cliente</strong></p>
+      </form>
+      <div class="auth-progress hidden" id="auth-progress">
+        <div class="progress-label">Descargando datos de campo...</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
     </div>
+  </section>
 
-    <!-- Flora Modal -->
-    <div id="flora-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('flora-modal')">&times;</span>
-            <h2 id="flora-modal-title">Registrar Planta</h2>
-            <form id="flora-form">
-                <input type="hidden" id="flora-id">
-                <div class="form-group">
-                    <label for="flora-nombreComun">Nombre Común</label>
-                    <input type="text" id="flora-nombreComun" required placeholder="Ej: Orquídea">
-                </div>
-                <div class="form-group">
-                    <label for="flora-nombreCientifico">Nombre Científico</label>
-                    <input type="text" id="flora-nombreCientifico" required placeholder="Ej: Cattleya trianae">
-                </div>
-                <div class="form-group">
-                    <label for="flora-familia">Familia</label>
-                    <input type="text" id="flora-familia" required placeholder="Ej: Orchidaceae">
-                </div>
-                <div class="form-group">
-                    <label for="flora-tipo">Tipo</label>
-                    <input type="text" id="flora-tipo" required placeholder="Ej: Hierba, Arbusto, Árbol">
-                </div>
-                <div class="form-group">
-                    <label for="flora-habitat">Hábitat</label>
-                    <input type="text" id="flora-habitat" required placeholder="Ej: Bosques andinos">
-                </div>
-                <div class="form-group">
-                    <label for="flora-ubicacionGeografica">Ubicación Geográfica</label>
-                    <input type="text" id="flora-ubicacionGeografica" required placeholder="Ej: Región Andina">
-                </div>
-                <div class="form-group">
-                    <label for="flora-estadoConservacion">Estado de Conservación</label>
-                    <select id="flora-estadoConservacion">
-                        <option value="Preocupación Menor">Preocupación Menor</option>
-                        <option value="Vulnerable">Vulnerable</option>
-                        <option value="En Peligro">En Peligro</option>
-                        <option value="En Peligro Crítico">En Peligro Crítico</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-primary">Guardar</button>
-            </form>
+  <!-- MAIN APP SHELL -->
+  <div id="app-shell" class="app-shell hidden">
+
+    <!-- TOP BAR -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <div class="status-badge" id="status-badge-online">
+          <span class="status-dot online"></span>
+          <span>En línea</span>
         </div>
+        <div class="status-badge warning hidden" id="status-badge-offline">
+          <span class="status-dot offline"></span>
+          <span>Fuera de línea</span>
+        </div>
+        <div class="pending-badge" id="pending-badge">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>
+          <span id="pending-count">0</span>
+          <span class="pending-label">pendientes</span>
+        </div>
+      </div>
+      <div class="top-bar-right">
+        <div class="storage-info" id="storage-info" title="Almacenamiento usado">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9h14l-2-5H7L5 9zM5 9v11h14V9M9 13h6"/></svg>
+          <span id="storage-pct">0%</span>
+        </div>
+        <button class="icon-btn" id="btn-sync" title="Sincronizar ahora">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+        </button>
+        <div class="user-chip" id="user-chip">
+          <div class="user-avatar" id="user-avatar">U</div>
+          <div class="user-meta">
+            <div class="user-name" id="user-name">Usuario</div>
+            <div class="user-role" id="user-role">Rol</div>
+          </div>
+          <button class="icon-btn" id="btn-logout" title="Cerrar sesión">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- SYNC NOTIFICATION -->
+    <div id="sync-toast" class="sync-toast hidden">
+      <div class="sync-toast-content">
+        <div class="sync-icon" id="sync-icon"></div>
+        <div class="sync-text" id="sync-text">Sincronizando...</div>
+      </div>
     </div>
 
-    <script src="js/api.js"></script>
-    <script src="js/app.js"></script>
+    <!-- MAIN CONTENT -->
+    <main class="main-area" id="main-outlet">
+
+      <!-- DASHBOARD -->
+      <div id="view-dashboard" class="view hidden">
+        <div class="page-header">
+          <div>
+            <h2 class="page-title">Panel de Control</h2>
+            <p class="page-subtitle" id="dashboard-date">Hoy</p>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card gradient-1">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7L9 18l-5-5"/></svg>
+            </div>
+            <div class="stat-body">
+              <div class="stat-num" id="stat-today">0</div>
+              <div class="stat-label">Registros hoy</div>
+            </div>
+          </div>
+          <div class="stat-card gradient-2">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>
+            </div>
+            <div class="stat-body">
+              <div class="stat-num" id="stat-pending">0</div>
+              <div class="stat-label">Pendientes de envío</div>
+            </div>
+          </div>
+          <div class="stat-card gradient-3">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M12 3v9l6 3"/></svg>
+            </div>
+            <div class="stat-body">
+              <div class="stat-num" id="stat-synced">0</div>
+              <div class="stat-label">Sincronizados</div>
+            </div>
+          </div>
+          <div class="stat-card gradient-4">
+            <div class="stat-icon">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>
+            </div>
+            <div class="stat-body">
+              <div class="stat-num" id="stat-total">0</div>
+              <div class="stat-label">Total locales</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="fab-primary" id="fab-nuevo" title="Nuevo avistamiento">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Nuevo Avistamiento</span>
+        </button>
+
+        <div class="quick-grid">
+          <button class="quick-card" onclick="App.navigate('/nuevo-registro')">
+            <div class="quick-icon icon-gps">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            </div>
+            <div class="quick-title">Nuevo Registro</div>
+            <div class="quick-desc">Capturar avistamiento con GPS y foto</div>
+          </button>
+
+          <button class="quick-card" onclick="App.navigate('/pendientes')">
+            <div class="quick-icon icon-clock">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>
+            </div>
+            <div class="quick-title">Pendientes</div>
+            <div class="quick-desc">Revisar y editar antes de enviar</div>
+          </button>
+
+          <button class="quick-card" onclick="App.navigate('/historico')">
+            <div class="quick-icon icon-history">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v6l4 2"/></svg>
+            </div>
+            <div class="quick-title">Histórico</div>
+            <div class="quick-desc">Consultar registros anteriores</div>
+          </button>
+
+          <button class="quick-card" onclick="App.navigate('/catalogo')">
+            <div class="quick-icon icon-book">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h11a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4V4z"/><path d="M4 16a4 4 0 0 1 4-4h11"/></svg>
+            </div>
+            <div class="quick-title">Catálogo</div>
+            <div class="quick-desc">Fauna y Flora colombiana</div>
+          </button>
+        </div>
+
+        <div class="recent-section">
+          <div class="section-header">
+            <h3>Actividad reciente</h3>
+            <button class="btn-link" onclick="App.navigate('/historico')">Ver todo</button>
+          </div>
+          <div id="recent-list" class="recent-list">
+            <p class="empty-hint">Aún no hay registros. Pulsa "Nuevo Avistamiento" para comenzar.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- NUEVO REGISTRO -->
+      <div id="view-nuevo" class="view hidden">
+        <div class="page-header with-back">
+          <button class="icon-btn back-btn" onclick="App.navigate('/')">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div>
+            <h2 class="page-title">Nuevo Avistamiento</h2>
+            <p class="page-subtitle">Captura rápida con GPS y foto</p>
+          </div>
+        </div>
+
+        <form id="form-avistamiento" class="form-card" novalidate>
+          <input type="hidden" id="av-idLocal">
+
+          <!-- GPS -->
+          <div class="form-section">
+            <div class="section-title-row">
+              <div class="section-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+              </div>
+              <h3 class="section-title">Ubicación GPS</h3>
+              <button type="button" class="btn-link" id="btn-refresh-gps">Actualizar</button>
+            </div>
+            <div class="gps-grid">
+              <div class="gps-box">
+                <label>Latitud</label>
+                <div class="gps-value" id="gps-lat">—</div>
+              </div>
+              <div class="gps-box">
+                <label>Longitud</label>
+                <div class="gps-value" id="gps-lng">—</div>
+              </div>
+              <div class="gps-box">
+                <label>Precisión</label>
+                <div class="gps-value" id="gps-precision">—</div>
+              </div>
+              <div class="gps-box">
+                <label>Hora</label>
+                <div class="gps-value" id="gps-time">—</div>
+              </div>
+            </div>
+            <div id="gps-status" class="gps-status idle">
+              <span class="gps-dot"></span>
+              <span id="gps-status-text">Presiona "Actualizar" para obtener coordenadas</span>
+            </div>
+          </div>
+
+          <!-- TAXONOMIA -->
+          <div class="form-section">
+            <div class="section-title-row">
+              <div class="section-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z"/></svg>
+              </div>
+              <h3 class="section-title">Taxonomía</h3>
+            </div>
+            <div class="chip-group" id="categoria-chips">
+              <button type="button" class="chip" data-cat="Fauna">🐾 Fauna</button>
+              <button type="button" class="chip" data-cat="Flora">🌿 Flora</button>
+              <button type="button" class="chip" data-cat="Fúngico">🍄 Fúngico</button>
+            </div>
+            <div class="field">
+              <label for="av-buscar">Buscar especie</label>
+              <input type="search" id="av-buscar" placeholder="Escribe nombre común o científico..." list="species-list">
+              <datalist id="species-list"></datalist>
+            </div>
+            <div class="two-col">
+              <div class="field">
+                <label for="av-nombreComun">Nombre común *</label>
+                <input type="text" id="av-nombreComun" required placeholder="Ej: Oso de Anteojos">
+              </div>
+              <div class="field">
+                <label for="av-nombreCientifico">Nombre científico</label>
+                <input type="text" id="av-nombreCientifico" placeholder="Ej: Tremarctos ornatus">
+              </div>
+            </div>
+            <div class="three-col">
+              <div class="field">
+                <label for="av-reino">Reino</label>
+                <input type="text" id="av-reino" placeholder="Animalia">
+              </div>
+              <div class="field">
+                <label for="av-filo">Filo / Clase</label>
+                <input type="text" id="av-filo" placeholder="Chordata / Mammalia">
+              </div>
+              <div class="field">
+                <label for="av-familia">Familia</label>
+                <input type="text" id="av-familia" placeholder="Ej: Ursidae">
+              </div>
+            </div>
+            <div class="two-col">
+              <div class="field">
+                <label for="av-cantidad">Cantidad de individuos</label>
+                <input type="number" id="av-cantidad" min="1" value="1">
+              </div>
+              <div class="field">
+                <label for="av-habitat">Hábitat / Ubicación</label>
+                <input type="text" id="av-habitat" placeholder="Ej: Bosque Andino">
+              </div>
+            </div>
+            <div class="field">
+              <label for="av-notas">Notas de observación</label>
+              <textarea id="av-notas" rows="3" placeholder="Comportamiento, características, clima..."></textarea>
+            </div>
+          </div>
+
+          <!-- FOTOS -->
+          <div class="form-section">
+            <div class="section-title-row">
+              <div class="section-icon">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2.5"/><path d="M21 16l-5-5-8 8"/></svg>
+              </div>
+              <h3 class="section-title">Evidencia fotográfica</h3>
+              <span class="muted">(máx. 2 fotos, compresión WebP automática)</span>
+            </div>
+            <div class="photo-grid" id="photo-grid">
+              <label class="photo-slot" for="photo-input-1">
+                <div class="slot-empty">
+                  <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  <div class="slot-title">Foto 1</div>
+                  <div class="slot-sub">Cámara o galería</div>
+                </div>
+                <img class="slot-preview hidden" id="preview-1" alt="Foto 1">
+                <button type="button" class="remove-photo hidden" id="remove-1" title="Eliminar foto">×</button>
+              </label>
+              <input type="file" id="photo-input-1" accept="image/*" capture="environment" class="hidden">
+
+              <label class="photo-slot" for="photo-input-2">
+                <div class="slot-empty">
+                  <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  <div class="slot-title">Foto 2</div>
+                  <div class="slot-sub">Opcional</div>
+                </div>
+                <img class="slot-preview hidden" id="preview-2" alt="Foto 2">
+                <button type="button" class="remove-photo hidden" id="remove-2" title="Eliminar foto">×</button>
+              </label>
+              <input type="file" id="photo-input-2" accept="image/*" capture="environment" class="hidden">
+            </div>
+            <div id="photo-progress" class="photo-progress hidden">
+              <div class="muted" id="photo-progress-text">Comprimiendo imagen...</div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" onclick="App.navigate('/')">Cancelar</button>
+            <button type="submit" class="btn-primary btn-large" id="btn-save-local">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+              Guardar en el teléfono
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- PENDIENTES -->
+      <div id="view-pendientes" class="view hidden">
+        <div class="page-header with-back">
+          <button class="icon-btn back-btn" onclick="App.navigate('/')">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div style="flex:1;">
+            <h2 class="page-title">Bandeja de Pendientes</h2>
+            <p class="page-subtitle" id="pendientes-summary">0 registros por sincronizar</p>
+          </div>
+          <button class="btn-primary" id="btn-force-sync">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+            Forzar envío
+          </button>
+        </div>
+        <div id="pendientes-list" class="card-list">
+          <p class="empty-hint">¡Todo sincronizado! No hay registros pendientes.</p>
+        </div>
+      </div>
+
+      <!-- HISTORICO -->
+      <div id="view-historico" class="view hidden">
+        <div class="page-header with-back">
+          <button class="icon-btn back-btn" onclick="App.navigate('/')">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div style="flex:1;">
+            <h2 class="page-title">Histórico Local</h2>
+            <p class="page-subtitle" id="historico-summary">0 registros guardados</p>
+          </div>
+        </div>
+        <div id="historico-list" class="card-list">
+          <p class="empty-hint">Aún no hay registros históricos.</p>
+        </div>
+      </div>
+
+      <!-- CATALOGO -->
+      <div id="view-catalogo" class="view hidden">
+        <div class="page-header with-back">
+          <button class="icon-btn back-btn" onclick="App.navigate('/')">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div style="flex:1;">
+            <h2 class="page-title">Catálogo de Especies</h2>
+            <p class="page-subtitle">Referencia rápida de Fauna y Flora</p>
+          </div>
+        </div>
+        <div class="catalog-tabs">
+          <button class="tab-btn active" data-tab="fauna">🐾 Fauna</button>
+          <button class="tab-btn" data-tab="flora">🌿 Flora</button>
+        </div>
+        <div class="catalog-search">
+          <input type="search" id="catalog-search" placeholder="Buscar especie...">
+        </div>
+        <div id="catalog-list" class="card-list">
+          <p class="empty-hint">Cargando catálogo...</p>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <button class="bn-item active" data-route="/" onclick="App.navigate('/')">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9"/><path d="M5 10v10h14V10"/></svg>
+        <span>Inicio</span>
+      </button>
+      <button class="bn-item" data-route="/nuevo-registro" onclick="App.navigate('/nuevo-registro')">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Registro</span>
+      </button>
+      <button class="bn-item" data-route="/pendientes" onclick="App.navigate('/pendientes')">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg>
+        <span>Pendientes</span>
+      </button>
+      <button class="bn-item" data-route="/historico" onclick="App.navigate('/historico')">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v6l4 2"/></svg>
+        <span>Histórico</span>
+      </button>
+      <button class="bn-item" data-route="/catalogo" onclick="App.navigate('/catalogo')">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h11a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4V4z"/><path d="M4 16a4 4 0 0 1 4-4h11"/></svg>
+        <span>Catálogo</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- DETAIL MODAL -->
+  <div id="detail-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" onclick="App.closeDetail()"></div>
+    <div class="modal-content" id="detail-content"></div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast hidden"></div>
+
+</div>
+
+<noscript>
+  <div class="noscript-fallback" style="padding:2rem;font-family:system-ui,sans-serif;background:#0f172a;color:#f8fafc;min-height:100vh;text-align:center;">
+    <div style="max-width:480px;margin:0 auto;">
+      <div style="width:96px;height:96px;border-radius:24px;background:#166534;margin:0 auto 1.5rem;display:flex;align-items:center;justify-content:center;">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none"><path d="M28 6C17 26 7 33 7 44c0 10 8 14 18 14 5 0 8-2 8-8 0-10-14-10-14-22 0-6 6-10 13-10 8 0 13 5 13 12 0 6-4 10-11 11-4 0-7-2-7-5" stroke="#4ade80" stroke-width="3" fill="#4ade80" fill-opacity="0.8"/></svg>
+      </div>
+      <h1 style="color:#4ade80;font-size:1.8rem;margin:0 0 .5rem;">BioColombia</h1>
+      <h2 style="color:#cbd5e1;font-size:1.1rem;font-weight:500;margin:0 0 1.5rem;">Monitoreo de Biodiversidad</h2>
+      <div style="background:#1e293b;border-radius:12px;padding:1.25rem;border:1px solid #334155;text-align:left;">
+        <p style="margin:0 0 .75rem;">⚠️ <strong>JavaScript deshabilitado</strong></p>
+        <p style="margin:0;color:#94a3b8;font-size:.95rem;line-height:1.6;">Esta es una Aplicación Web Progresiva (PWA) y requiere JavaScript activado para funcionar. Habilita JavaScript en tu navegador y recarga la página para poder registrar avistamientos, sincronizar datos y usar la app en modo offline.</p>
+      </div>
+    </div>
+  </div>
+</noscript>
+
+<script src="js/api.js" defer></script>
+<script src="js/router.js" defer></script>
+<script src="js/db.js" defer></script>
+<script src="js/imageCompress.js" defer></script>
+<script src="js/sync.js" defer></script>
+<script src="js/app.js" defer></script>
 </body>
 </html>

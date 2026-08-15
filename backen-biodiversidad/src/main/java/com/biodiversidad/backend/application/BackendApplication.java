@@ -13,6 +13,10 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @EnableMongoRepositories(basePackages = "com.biodiversidad.backend.infrastructure.adapter.repository")
 public class BackendApplication {
 
+    // Constructor protegido para ocultar el público implícito (Fix SonarCloud java:S1118) pero permitir proxy CGLIB
+    protected BackendApplication() {
+    }
+
     public static void main(String[] args) {
         SpringApplication.run(BackendApplication.class, args);
     }

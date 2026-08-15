@@ -1,5 +1,6 @@
 # Maven
 /target/
+**/target/
 !.mvn/wrapper/maven-wrapper.jar
 
 # Eclipse
@@ -32,6 +33,12 @@ application-*.properties
 
 # Archivos de construcción
 /build/
+
+# Python / auxiliares PDF
+__pycache__/
+*.pyc
+extract_pdf.py
+informe_contenido.txt
 
 # Otros
 *.swp

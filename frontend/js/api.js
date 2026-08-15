@@ -1,205 +1,158 @@
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://localhost:8081/api';
+
+class AuthManager {
+  static STORAGE_KEY = 'biocolombia_auth';
+
+  static login(authResponse) {
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(authResponse));
+  }
+
+  static logout() {
+    localStorage.removeItem(this.STORAGE_KEY);
+  }
+
+  static getUser() {
+    try {
+      const raw = localStorage.getItem(this.STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static isAuthenticated() {
+    const u = this.getUser();
+    if (!u || !u.token) return false;
+    try {
+      const payload = JSON.parse(atob(u.token.split('.')[1]));
+      if (payload.exp && (payload.exp * 1000) < Date.now()) {
+        return false;
+      }
+      return true;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  static getToken() {
+    const u = this.getUser();
+    return u ? u.token : null;
+  }
+}
 
 class ApiService {
-    static getAuthHeaders() {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (user && user.authHeader) {
-            return {
-                'Content-Type': 'application/json',
-                'Authorization': user.authHeader
-            };
-        }
-        return {
-            'Content-Type': 'application/json'
-        };
+  static getAuthHeaders(includeContentType = true) {
+    const headers = {};
+    if (includeContentType) {
+      headers['Content-Type'] = 'application/json';
     }
-
-    static async login(username, password) {
-        // Create Basic Auth header
-        const authHeader = 'Basic ' + btoa(username + ':' + password);
-        
-        // Test credentials by making a request that requires auth
-        try {
-            const response = await fetch(`${API_BASE_URL}/fauna`, {
-                headers: {
-                    'Authorization': authHeader
-                }
-            });
-
-            if (response.status === 401 || response.status === 403) {
-                throw new Error('Credenciales inválidas');
-            }
-            
-            if (!response.ok) {
-                throw new Error('Error de conexión con el servidor');
-            }
-
-            // If successful, return user object with auth header
-            // Determine role based on username (Hardcoded for this demo matching backend)
-            let role = 'User';
-            if (username === 'Administrador') role = 'Admin';
-            if (username === 'Cliente') role = 'Client';
-
-            return {
-                username: username,
-                roleId: role,
-                authHeader: authHeader
-            };
-        } catch (error) {
-            console.error('Login Error:', error);
-            throw error;
-        }
+    const token = AuthManager.getToken();
+    if (token) {
+      headers['Authorization'] = 'Bearer ' + token;
     }
+    return headers;
+  }
 
-    // Users API
-    static async register(user) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/users`, {
-                method: 'POST',
-                headers: this.getAuthHeaders(),
-                body: JSON.stringify(user)
-            });
-            if (response.status === 403) throw new Error('No tienes permisos para registrar usuarios (Solo Admin)');
-            if (!response.ok) throw new Error('Error al registrar usuario');
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
+  static async _request(url, options = {}) {
+    const finalOptions = {
+      ...options,
+      headers: this.getAuthHeaders(!(options.body instanceof FormData)),
+    };
+    if (options.body && !(options.body instanceof FormData) && typeof options.body !== 'string') {
+      finalOptions.body = JSON.stringify(options.body);
     }
+    let resp;
+    try {
+      resp = await fetch(`${API_BASE_URL}${url}`, finalOptions);
+    } catch (err) {
+      throw new Error('Sin conexión al servidor');
+    }
+    if (resp.status === 401) {
+      AuthManager.logout();
+      throw new Error('Sesión expirada');
+    }
+    if (!resp.ok) {
+      let msg = 'Error en la solicitud';
+      try {
+        const data = await resp.json();
+        if (data && data.error) msg = data.error;
+      } catch (e) {}
+      const err = new Error(msg);
+      err.status = resp.status;
+      throw err;
+    }
+    const text = await resp.text();
+    if (!text) return null;
+    try { return JSON.parse(text); } catch (e) { return text; }
+  }
 
-    static async getAllUsers() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/users`, {
-                headers: this.getAuthHeaders()
-            });
-            if (!response.ok) throw new Error('Error al obtener usuarios');
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
+  static async login(username, password) {
+    const resp = await this._request('/auth/login', {
+      method: 'POST',
+      body: { username, password }
+    });
+    return resp;
+  }
 
-    // Fauna API
-    static async getAllFauna() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/fauna`, {
-                headers: this.getAuthHeaders()
-            });
-            if (!response.ok) throw new Error('Error al cargar la fauna');
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
+  static async register(userData) {
+    return this._request('/auth/register', {
+      method: 'POST',
+      body: userData
+    });
+  }
 
-    static async createFauna(fauna) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/fauna`, {
-                method: 'POST',
-                headers: this.getAuthHeaders(),
-                body: JSON.stringify(fauna)
-            });
-            if (response.status === 403) throw new Error('No tienes permisos (Solo Admin)');
-            if (!response.ok) throw new Error('Error al crear fauna');
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
+  static async getAllFauna() {
+    return this._request('/fauna', { method: 'GET' });
+  }
+  static async createFauna(data) {
+    return this._request('/fauna', { method: 'POST', body: data });
+  }
+  static async updateFauna(id, data) {
+    return this._request(`/fauna/${id}`, { method: 'PUT', body: data });
+  }
+  static async deleteFauna(id) {
+    return this._request(`/fauna/${id}`, { method: 'DELETE' });
+  }
 
-    static async updateFauna(id, fauna) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/fauna/${id}`, {
-                method: 'PUT',
-                headers: this.getAuthHeaders(),
-                body: JSON.stringify(fauna)
-            });
-            if (response.status === 403) throw new Error('No tienes permisos (Solo Admin)');
-            if (!response.ok) throw new Error('Error al actualizar fauna');
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
+  static async getAllFlora() {
+    return this._request('/flora', { method: 'GET' });
+  }
+  static async createFlora(data) {
+    return this._request('/flora', { method: 'POST', body: data });
+  }
+  static async updateFlora(id, data) {
+    return this._request(`/flora/${id}`, { method: 'PUT', body: data });
+  }
+  static async deleteFlora(id) {
+    return this._request(`/flora/${id}`, { method: 'DELETE' });
+  }
 
-    static async deleteFauna(id) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/fauna/${id}`, {
-                method: 'DELETE',
-                headers: this.getAuthHeaders()
-            });
-            if (response.status === 403) throw new Error('No tienes permisos (Solo Admin)');
-            if (!response.ok) throw new Error('Error al eliminar fauna');
-            return true;
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
-    // Flora API
-    static async getAllFlora() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/flora`, {
-                headers: this.getAuthHeaders()
-            });
-            if (!response.ok) throw new Error('Error al cargar la flora');
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
+  static async getAllAvistamientos() {
+    return this._request('/avistamientos', { method: 'GET' });
+  }
+  static async createAvistamiento(data) {
+    return this._request('/avistamientos', { method: 'POST', body: data });
+  }
+  static async syncAvistamientosBatch(avistamientos) {
+    return this._request('/avistamientos/batch', { method: 'POST', body: avistamientos });
+  }
+  static async updateAvistamiento(id, data) {
+    return this._request(`/avistamientos/${id}`, { method: 'PUT', body: data });
+  }
+  static async deleteAvistamiento(id) {
+    return this._request(`/avistamientos/${id}`, { method: 'DELETE' });
+  }
 
-    static async createFlora(flora) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/flora`, {
-                method: 'POST',
-                headers: this.getAuthHeaders(),
-                body: JSON.stringify(flora)
-            });
-            if (response.status === 403) throw new Error('No tienes permisos (Solo Admin)');
-            if (!response.ok) throw new Error('Error al crear flora');
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
-
-    static async updateFlora(id, flora) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/flora/${id}`, {
-                method: 'PUT',
-                headers: this.getAuthHeaders(),
-                body: JSON.stringify(flora)
-            });
-            if (response.status === 403) throw new Error('No tienes permisos (Solo Admin)');
-            if (!response.ok) throw new Error('Error al actualizar flora');
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
-
-    static async deleteFlora(id) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/flora/${id}`, {
-                method: 'DELETE',
-                headers: this.getAuthHeaders()
-            });
-            if (response.status === 403) throw new Error('No tienes permisos (Solo Admin)');
-            if (!response.ok) throw new Error('Error al eliminar flora');
-            return true;
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
-
+  static async getAllUsers() {
+    return this._request('/users', { method: 'GET' });
+  }
+  static async createUser(data) {
+    return this._request('/users', { method: 'POST', body: data });
+  }
+  static async updateUser(id, data) {
+    return this._request(`/users/${id}`, { method: 'PUT', body: data });
+  }
+  static async deleteUser(id) {
+    return this._request(`/users/${id}`, { method: 'DELETE' });
+  }
 }

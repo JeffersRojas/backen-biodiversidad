@@ -10,6 +10,7 @@ import java.util.List;
  */
 public interface UserRepository {
     Optional<User> findByEmail(String email);
+    Optional<User> findByUsername(String username);
     Optional<User> findById(String id);
     User save(User user);
     void deleteById(String id);

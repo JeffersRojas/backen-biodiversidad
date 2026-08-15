@@ -4,6 +4,7 @@ import com.biodiversidad.backend.domain.model.User;
 import com.biodiversidad.backend.domain.port.out.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +19,8 @@ class UserServiceImplTest {
     @Test
     void getAllUsers_devuelveListaUsuarios() {
         UserRepository userRepository = Mockito.mock(UserRepository.class);
-        UserServiceImpl userService = new UserServiceImpl(userRepository);
+        PasswordEncoder passwordEncoder = Mockito.mock(PasswordEncoder.class);
+        UserServiceImpl userService = new UserServiceImpl(userRepository, passwordEncoder);
 
         List<User> usuarios = List.of(
                 new User("1", "a@correo.com", "user1", "pwd", "Admin"),
@@ -37,7 +39,8 @@ class UserServiceImplTest {
     @Test
     void getUserByEmail_devuelveUsuarioCuandoExiste() {
         UserRepository userRepository = Mockito.mock(UserRepository.class);
-        UserServiceImpl userService = new UserServiceImpl(userRepository);
+        PasswordEncoder passwordEncoder = Mockito.mock(PasswordEncoder.class);
+        UserServiceImpl userService = new UserServiceImpl(userRepository, passwordEncoder);
 
         String email = "test@correo.com";
         User user = new User("1", email, "usuario", "pwd", "Admin");
@@ -54,7 +57,8 @@ class UserServiceImplTest {
     @Test
     void updateUser_actualizaCamposBasicosCuandoExiste() {
         UserRepository userRepository = Mockito.mock(UserRepository.class);
-        UserServiceImpl userService = new UserServiceImpl(userRepository);
+        PasswordEncoder passwordEncoder = Mockito.mock(PasswordEncoder.class);
+        UserServiceImpl userService = new UserServiceImpl(userRepository, passwordEncoder);
 
         User existente = new User("1", "old@correo.com", "oldUser", "pwd", "Client");
         User actualizado = new User(null, "new@correo.com", "newUser", "pwd", "Admin");
@@ -74,11 +78,11 @@ class UserServiceImplTest {
     @Test
     void deleteUser_invocaDeleteEnRepositorio() {
         UserRepository userRepository = Mockito.mock(UserRepository.class);
-        UserServiceImpl userService = new UserServiceImpl(userRepository);
+        PasswordEncoder passwordEncoder = Mockito.mock(PasswordEncoder.class);
+        UserServiceImpl userService = new UserServiceImpl(userRepository, passwordEncoder);
 
         userService.deleteUser("1");
 
         verify(userRepository).deleteById("1");
     }
 }
-

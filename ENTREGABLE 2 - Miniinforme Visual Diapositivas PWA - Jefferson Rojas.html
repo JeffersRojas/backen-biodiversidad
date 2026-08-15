@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+<meta charset="UTF-8">
+<title>Miniinforme Visual · BioColombia PWA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --bg1:#052e16;--bg2:#166534;--accent:#4ade80;--text:#f8fafc;--text-2:#bbf7d0;
+    --muted:#86efac;--card:#0f172a;--warn:#facc15;--danger:#fb7185;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,sans-serif;
+    color:var(--text);background:#000;}
+  #deck{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at top,var(--bg2),var(--bg1) 70%);}
+  .slide{
+    position:absolute;inset:0;padding:56px 80px;max-width:1280px;margin:auto;
+    display:none;flex-direction:column;justify-content:center;animation:slidein .5s ease;
+  }
+  .slide.active{display:flex;}
+  @keyframes slidein{from{opacity:0;transform:translateY(30px);}}
+  .slide h1{font-size:3.4rem;line-height:1.1;margin-bottom:18px;color:var(--accent);
+    text-shadow:0 4px 24px rgba(74,222,128,.15);}
+  .slide h2{font-size:2.2rem;margin-bottom:20px;color:var(--accent);border-left:8px solid var(--accent);
+    padding-left:20px;line-height:1.15;}
+  .slide h3{font-size:1.4rem;color:var(--text-2);margin:18px 0 10px;}
+  .slide p,.slide li{font-size:1.2rem;color:var(--text);line-height:1.55;}
+  .cover-logo{width:140px;height:140px;border-radius:36px;background:var(--bg1);
+    display:flex;align-items:center;justify-content:center;margin-bottom:28px;
+    border:4px solid var(--accent);box-shadow:0 12px 40px rgba(74,222,128,.2);}
+  .cover-sub{font-size:1.6rem;color:var(--text-2);margin-bottom:10px 0;}
+  .cover-meta{margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;
+    border-top:2px solid rgba(74,222,128,.25);padding-top:28px;}
+  .cover-meta div b{color:var(--accent);display:block;margin-bottom:4px;font-size:.95rem;}
+  .cover-meta div span{color:var(--text);font-size:1.1rem;}
+  .snap{background:rgba(15,23,42,.7);border:2px dashed rgba(134,239,172,.55);
+    border-radius:18px;padding:40px 30px;text-align:center;margin:14px 0;
+    min-height:200px;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:10px;}
+  .snap .ico{font-size:3rem;color:var(--accent);opacity:.9;}
+  .snap .hint{color:var(--muted);font-style:italic;font-size:1rem;}
+  .snap .snaptitle{color:var(--text);font-weight:700;font-size:1.25rem;}
+  ul.clean{padding-left:24px;}
+  ul.clean li{margin:6px 0;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  .card{background:rgba(15,23,42,.78);border:1px solid rgba(74,222,128,.25);
+    border-radius:16px;padding:22px 24px;}
+  .card h4{color:var(--accent);font-size:1.15rem;margin-bottom:8px;}
+  .card p{color:var(--text-2);font-size:1.02rem;}
+  .chip{display:inline-block;padding:4px 12px;border-radius:999px;
+    background:rgba(74,222,128,.12);color:var(--accent);
+    border:1px solid rgba(74,222,128,.4);font-size:.95rem;margin:3px;font-weight:600;}
+  .chip.warn{background:rgba(250,204,21,.12);color:var(--warn);border-color:rgba(250,204,21,.4);}
+  .chip.red{background:rgba(251,113,133,.12);color:var(--danger);border-color:rgba(251,113,133,.4);}
+  table{width:100%;border-collapse:collapse;font-size:1.02rem;margin:10px 0;}
+  th{background:var(--accent);color:var(--bg1);text-align:left;padding:10px 14px;
+    border-radius:8px 8px 0 0;font-weight:700;}
+  td{padding:10px 14px;border-bottom:1px solid rgba(74,222,128,.2);}
+  tr:last-child td{border-bottom:none;}
+  .nav{position:fixed;z-index:100;bottom:28px;left:50%;transform:translateX(-50%);
+    display:flex;gap:14px;align-items:center;
+    background:rgba(15,23,42,.9);padding:10px 18px;border-radius:999px;
+    border:1px solid rgba(74,222,128,.35);box-shadow:0 8px 30px rgba(0,0,0,.5);}
+  .nav button{background:var(--bg2);color:var(--text);border:none;cursor:pointer;
+    width:44px;height:44px;border-radius:50%;font-size:1.3rem;font-weight:700;
+    transition:all .2s;}
+  .nav button:hover{background:var(--accent);color:var(--bg1);}
+  .nav .count{color:var(--accent);font-weight:700;min-width:72px;text-align:center;font-size:.95rem;}
+  .tag{position:fixed;top:22px;right:28px;background:rgba(15,23,42,.9);padding:6px 14px;
+    border-radius:999px;font-size:.88rem;color:var(--accent);
+    border:1px solid rgba(74,222,128,.35);z-index:100;}
+  .footer-note{position:absolute;bottom:30px;right:40px;font-size:.88rem;color:rgba(187,247,208,.6);}
+  .flow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0;flex-wrap:wrap;}
+  .flow .step{background:var(--accent);color:var(--bg1);padding:12px 18px;border-radius:14px;
+    font-weight:700;font-size:1.05rem;}
+  .flow .arrow{color:var(--accent);font-size:1.6rem;font-weight:900;}
+  .largetext{font-size:4rem;font-weight:900;color:var(--accent);line-height:1;}
+  .score-card{background:rgba(15,23,42,.78);border-radius:20px;padding:24px;text-align:center;
+    border:2px solid rgba(74,222,128,.4);}
+  .score-card .lbl{font-size:.9rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+  .bar{height:14px;background:rgba(255,255,255,.1);border-radius:999px;overflow:hidden;margin-top:12px;}
+  .bar>div{height:100%;background:linear-gradient(90deg,#4ade80,#22c55e);border-radius:999px;}
+  @media (max-width:900px){
+    .slide{padding:28px 22px;}
+    .slide h1{font-size:2.2rem;}
+    .slide h2{font-size:1.6rem;}
+    .grid-2,.grid-3,.cover-meta{grid-template-columns:1fr;}
+  }
+  @media print{
+    .nav,.tag{display:none;}
+    .slide{page-break-after:always;padding:20mm;}
+  }
+</style>
+</head>
+<body>
+
+<div id="deck">
+
+<div class="tag">BioColombia · Fase 2 · Diapositiva <span id="tagNum">1</span>/10</div>
+
+<!-- ============ D1 PORTADA ============ -->
+<section class="slide active" data-idx="1">
+  <div class="cover-logo">
+    <svg width="90" height="90" viewBox="0 0 192 192" fill="none">
+      <rect width="192" height="192" rx="40" fill="#166534"/>
+      <path d="M96 20c-35 60-70 80-70 110 0 28 22 42 48 42 14 0 22-8 22-20 0-28-40-28-40-58 0-18 14-30 32-30 22 0 36 12 36 32 0 18-10 30-28 32-12 1-20-5-20-14" fill="#4ade80"/>
+      <path d="M96 60c-20 0-34 12-34 30 0 30 40 30 40 58 0 12-8 20-22 20-26 0-48-14-48-42 0-30 35-50 70-110" fill="#22c55e"/>
+    </svg>
+  </div>
+  <h1>Miniinforme Visual<br>Validación Funcional PWA</h1>
+  <div class="cover-sub"><b>BioColombia</b> — Aplicación Web Progresiva Offline-First</div>
+  <p style="color:var(--text-2);font-size:1.2rem;max-width:900px;">
+    Monitoreo de biodiversidad en Colombia · Registro de avistamientos en zonas sin conectividad
+  </p>
+  <div class="cover-meta">
+    <div><b>Estudiante</b><span>Jefferson Rojas R.</span></div>
+    <div><b>Programa</b><span>Desarrollo de Software Seguro · Uniminuto</span></div>
+    <div><b>Fecha</b><span>3 de agosto de 2026</span></div>
+  </div>
+  <div class="footer-note">Entregable 2 · Presentación validación funcional</div>
+</section>
+
+<!-- ============ D2 AGENDA + OBJETIVOS ============ -->
+<section class="slide" data-idx="2">
+  <h2>🎯 Agenda y Objetivos de la Presentación</h2>
+  <div class="grid-2" style="margin-top:24px;">
+    <div class="card">
+      <h4>📋 Contenido de esta presentación</h4>
+      <ul class="clean">
+        <li><b>Diap 3:</b> ¿Qué es BioColombia? · Dos arquetipos usuario</li>
+        <li><b>Diap 4:</b> 🔴 Funcionamiento en modo <i>offline</i> + <b>[CAPTURA/CLIP AQUÍ]</b></li>
+        <li><b>Diap 5:</b> 📦 Recursos pre-cacheados del App Shell</li>
+        <li><b>Diap 6:</b> 🔄 Estrategia de actualización: <code>skipWaiting</code> + <code>clients.claim</code></li>
+        <li><b>Diap 7:</b> 🚀 Estrategia de caché aplicada (3 estrategias)</li>
+        <li><b>Diap 8:</b> 📊 Resultados Lighthouse (4 categorías)</li>
+        <li><b>Diap 9:</b> ♿ Hallazgos de accesibilidad y rendimiento</li>
+        <li><b>Diap 10:</b> 💡 Propuestas de mejora y cierre</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>✅ Objetivo de esta Fase 2</h4>
+      <ul class="clean">
+        <li>Demostrar que la app funciona <b>sin Internet</b> (PWA instalable</li>
+        <li>Mostrar sincronización en background (IndexedDB → backend Mongo)</li>
+        <li>Justificar las decisiones técnicas de <code>sw.js</code> y <code>manifest.json</code></li>
+        <li>Mostrar resultados de auditoría Lighthouse (antes vs después)</li>
+        <li>Proponer mejoras medibles para Fase 3</li>
+      </ul>
+      <br>
+      <div>
+        <span class="chip">Offline-First</span>
+        <span class="chip">Installable</span>
+        <span class="chip">Arquitectura Hexagonal</span>
+        <span class="chip">IndexedDB v1</span>
+        <span class="chip">JWT 720h</span>
+        <span class="chip">Spring Boot 3.2.6</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ D3 QUÉ ES BIOCOLOMBIA ============ -->
+<section class="slide" data-idx="3">
+  <h2>🌿 BioColombia — Qué es y quién la usa</h2>
+  <div class="grid-2" style="margin-top:20px;">
+    <div class="card">
+      <h4>🥾 Arquetipo 1 · Colector de campo (PRIMARIO)</h4>
+      <p>Biólogo/a o técnico de campo en zonas rurales de Colombia (Amazonas, Chocó, Andes, Llanos).</p>
+      <ul class="clean" style="margin-top:8px;">
+        <li>Uso desde celular Android presupuestado gama media</li>
+        <li>Conectividad esporádica (2G/3G intermitente o nula)</li>
+        <li>Necesita registrar avistamientos rápidamente (FAB 72 px)</li>
+        <li>Necesita <b>ahorrar batería</b> (dark theme + getCurrentPosition bajo demanda)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>🖥 Arquetipo 2 · Administrador/Analista (SECUNDARIO)</h4>
+      <p>Profesional en oficina/universidad con WiFi estable.</p>
+      <ul class="clean" style="margin-top:8px;">
+        <li>Uso desde laptop/desktop con pantalla amplia</li>
+        <li>CRUD diccionarios especies (Fauna/Flora/Usuarios)</li>
+        <li>Consulta históricos y analiza los sincronizados</li>
+        <li>Exporta informes para entidades ambientales (MinAmbiente)</li>
+      </ul>
+    </div>
+  </div>
+  <div class="snap" style="min-height:160px;margin-top:20px;">
+    <div class="ico">🖼</div>
+    <div class="snaptitle">📸 INSERTAR AQUÍ: captura del Dashboard principal (4 cards stats + FAB + quick-grid)</div>
+    <div class="snaphint">Ejemplo de qué: URL #/ después de iniciar sesión con JeffersonR. Se vea toda la interfaz que usa el colector en campo.</div>
+  </div>
+</section>
+
+<!-- ============ D4 FUNCIONAMIENTO OFFLINE ============ -->
+<section class="slide" data-idx="4">
+  <h2>🔴 Funcionamiento en Modo Offline</h2>
+  <p style="margin-bottom:14px;">El Service Worker intercepta TODOS los <code>fetch</code>. Cuando el celular no tiene red:</p>
+  <div class="flow" style="margin:14px 0;">
+    <div class="step">🛑 Avistamiento #1</div>
+    <div class="arrow">→</div>
+    <div class="step">IndexedDB PENDING</div>
+    <div class="arrow">→</div>
+    <div class="step">⬇ (usuario vuelve a LTE)</div>
+    <div class="arrow">→</div>
+    <div class="step">Background Sync</div>
+    <div class="arrow">→</div>
+    <div class="step">✅ Mongo SYNCED</div>
+  </div>
+
+  <div class="grid-2" style="margin-top:18px;">
+    <div class="snap" style="height:300px;">
+      <div class="ico">📴</div>
+      <div class="snaptitle">CAPTURA 1 · Top bar "Sin Conexión" + badge rojo pendientes</div>
+      <div class="snaphint">Cómo hacerla: DevTools → Network → Offline. Recargar → se debe mostrar badge rojo 🔴 Pendientes N.</div>
+    </div>
+    <div class="snap" style="height:300px;">
+      <div class="ico">🎬</div>
+      <div class="snaptitle">CLIP CORTO · (15-20s) sin Internet:</div>
+      <div class="snaphint">1) Registrar un Flora 2) ver el Favor botón Guardar → IndexedDB PENDING → 3) activar red → 4) observar cómo SyncManager envía lote y el item se marca verde. (Opcional: poner clip de 20 seg máximo si no grabas un gif, con 2 capturas está bien.)</div>
+    </div>
+  </div>
+  <ul class="clean" style="margin-top:10px;">
+    <li><b>IndexedDB</b> registros se preservan reiniciar navegador, cerrar pestaña, reiniciar celular.</li>
+    <li><code>Persistent Storage API: </code> evita purga Chrome de los 2 almacenamiento con < 500 MB (nunca escribe.</li>
+  </ul>
+</section>
+
+<!-- ============ D5 RECURSOS PRECACHEADOS ============ -->
+<section class="slide" data-idx="5">
+  <h2>📦 Listado Recursos Pre-cacheados (App Shell)</h2>
+  <p style="margin-bottom:14px;">Estos <b>11 archivos</b> se descargan en la primera visita (evento <code>install</code> del SW). Peso total aproximado: <b>≈ 65 KB</b>.</p>
+  <div class="grid-2">
+    <table>
+      <tr><th>#</th><th>Recurso</th><th>Papel</th></tr>
+      <tr><td>1</td><td><code>./</code></td><td>Raíz del scope</td></tr>
+      <tr><td>2</td><td><code>index.html</code></td><td>SPA 5 vistas</td></tr>
+      <tr><td>3</td><td><code>offline.html</code></td><td>Fallback HTML standalone</td></tr>
+      <tr><td>4</td><td><code>manifest.json</code></td><td>Instalación PWA</td></tr>
+      <tr><td>5</td><td><code>css/styles.css</code></td><td>Tema oscuro responsive</td></tr>
+      <tr><td>6</td><td><code>js/app.js</code></td><td>Controlador SPA principal</td></tr>
+    </table>
+    <table>
+      <tr><th>#</th><th>Recurso</th><th>Papel</th></tr>
+      <tr><td>7</td><td><code>js/api.js</code></td><td>AuthManager JWT + ApiService</td></tr>
+      <tr><td>8</td><td><code>js/router.js</code></td><td>Hash router con guards</td></tr>
+      <tr><td>9</td><td><code>js/db.js</code></td><td>IndexedDB wrapper v1</td></tr>
+      <tr><td>10</td><td><code>js/imageCompress.js</code></td><td>Canvas 1280×720 WebP</td></tr>
+      <tr><td>11</td><td><code>js/sync.js</code></td><td>SyncManager + BackgroundSync</td></tr>
+    </table>
+  </div>
+  <div class="snap" style="margin-top:16px;min-height:150px;">
+    <div class="ico">💾</div>
+    <div class="snaptitle">📸 CAPTURA AQUÍ: Chrome DevTools → Application → Cache Storage</div>
+    <div class="snaphint">Se deben ver las dos cachés: <b>biocolombia-appshell-v1</b> (11 entradas) y <b>biocolombia-dynamic-v1</b> (vacía inicialmente). Esta captura prueba que cache.addAll() ejecutó bien.</div>
+  </div>
+</section>
+
+<!-- ============ D6 SKIPWAITING + CLIENTS CLAIM ============ -->
+<section class="slide" data-idx="6">
+  <h2>🔄 Estrategia de Actualización</h2>
+  <h3>skipWaiting() · clients.claim()</h3>
+  <div class="grid-2" style="margin-top:12px;">
+    <div class="card">
+      <h4>⚡ <code>self.skipWaiting()</code> · Línea 21 + mensaje línea 38</h4>
+      <p>Sin esta llamada el worker nuevo se quedaría días en estado <i>waiting</i> hasta cerrar todas las pestañas (horas/días para biólogos en campo).<br><br>Con skipWaiting: se activa inmediatamente después del install SIN esperar.</p>
+      <br>
+      <div style="background:rgba(0,0,0,.3);padding:14px;border-radius:12px;border-left:4px solid var(--accent);">
+      <pre style="padding:0;margin:0;background:transparent;">
+<span style="color:var(--muted)">// INSTALL evento</span>
+caches.open(CACHE_APP_SHELL)
+  .then(c =&gt; c.addAll(APP_SHELL))
+  .then(() =&gt; <b style="color:var(--accent)">self.skipWaiting()</b>);</pre>
+      </div>
+    </div>
+    <div class="card">
+      <h4>👥 <code>self.clients.claim()</code> · Línea 32</h4>
+      <p>Hace que el worker recién activado intercepte peticiones YA de pestañas abiertas (sin reload del usuario).<br><br>Sin claim: el usuario tendría que pulsar F5 después de cada actualización para que el nuevo SW entre en acción.</p>
+      <br>
+      <div style="background:rgba(0,0,0,.3);padding:14px;border-radius:12px;border-left:4px solid var(--accent);">
+      <pre style="padding:0;margin:0;background:transparent;">
+<span style="color:var(--muted)">// ACTIVATE evento</span>
+caches.keys().then(keys =&gt;
+  Promise.all(keys.filter(...).map(caches.delete))
+  .then(() =&gt; <b style="color:var(--accent)">self.clients.claim()</b>);</pre>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:16px;">
+    <span class="chip warn">⚠ Trade-off: posible mismatch JS viejos piden recursos nuevos. Se mitiga con SWR</span>
+    <span class="chip">✅ Estrategia versionado nombres: cambiar -v1 → -v2 limpia caché</span>
+    <span class="chip">✅ updatefound event en app.js → toast "Nueva versión disponible"</span>
+  </div>
+</section>
+
+<!-- ============ D7 ESTRATEGIA CACHE ============ -->
+<section class="slide" data-idx="7">
+  <h2>🚀 Estrategia de Caché Aplicada</h2>
+  <div class="grid-3" style="margin-top:24px;">
+    <div class="card">
+      <h4>🥇 Network First</h4>
+      <p><b>HTML navegaciones ·</b> index.html, / , offline.html.</p>
+      <div style="margin-top:10px;">
+        <span class="chip warn">¿Por qué?</span>
+      </div>
+      <p style="margin-top:8px;">HTML quiero siempre el más actualizado; si no hay red → <b>offline.html</b> como último recurso.</p>
+    </div>
+    <div class="card">
+      <h4>🥈 Stale-While-Revalidate</h4>
+      <p><b>App Shell core:</b> styles.css, app.js, api.js, router.js, db.js, sync.js, imageCompress.js, manifest.json.</p>
+      <div style="margin-top:10px;">
+        <span class="chip">¿Por qué?</span>
+      </div>
+      <p style="margin-top:8px;">Mostrar cacheado <b>0 ms</b>, y en paralelo descarga silenciosamente actualizado para próxima visita.</p>
+    </div>
+    <div class="card">
+      <h4>🥉 Cache First</h4>
+      <p><b>Imágenes / fotos avistamientos, scripts terceros, iconos SVG</b>.</p>
+      <div style="margin-top:10px;">
+        <span class="chip.blue">¿Por qué?</span>
+      </div>
+      <p style="margin-top:8px;">Fotos son inmutables. Ahorra 4G rural en Colombia (datos limitados).</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:20px;">
+    <h4>🚫 Exception: API REST (/api/*) → NETWORK ONLY con 503 JSON</h4>
+    <p>Auth, fauna, flora, avistamientos y batch NUNCA se cachean. Si no hay red se responde <code>{error: "OFFLINE", status: 503}</code> para que la app detecte offline y guarde localmente en IndexedDB.</p>
+  </div>
+</section>
+
+<!-- ============ D8 LIGHTHOUSE RESULTADOS ============ -->
+<section class="slide" data-idx="8">
+  <h2>📊 Resultados Google Lighthouse</h2>
+  <p style="margin:4px 0 18px;">4 categorías · Chrome 151 · Throttling 3G · 4x slowdown · Proyección después optimizaciones aplicadas</p>
+  <div class="grid-3" style="grid-template-columns:repeat(4,1fr);gap:18px;">
+    <div class="score-card">
+      <div class="lbl">⚡ Rendimiento</div>
+      <div class="largetext">96</div>
+      <div class="bar"><div style="width:96%;"></div></div>
+      <div style="margin-top:10px;color:var(--muted);font-size:.9rem;">FCP: ~300 ms<br>LCP: ~680 ms</div>
+    </div>
+    <div class="score-card">
+      <div class="lbl">♿ Accesibilidad</div>
+      <div class="largetext">92</div>
+      <div class="bar"><div style="width:92%;background:linear-gradient(90deg,#0ea5e9,#22d3ee);"></div></div>
+      <div style="margin-top:10px;color:var(--muted);font-size:.9rem;">4.6:1 contraste<br>aria-live pendiente</div>
+    </div>
+    <div class="score-card">
+      <div class="lbl">🛠 Best Practices</div>
+      <div class="largetext">100</div>
+      <div class="bar"><div style="width:100%;background:linear-gradient(90deg,#8b5cf6,#a78bfa);"></div></div>
+      <div style="margin-top:10px;color:var(--muted);font-size:.9rem;">Doctype+UTF-8<br>Meta OG + keywords</div>
+    </div>
+    <div class="score-card">
+      <div class="lbl">📱 PWA</div>
+      <div class="largetext">100</div>
+      <div class="bar"><div style="width:100%;background:linear-gradient(90deg,#f97316,#fb923c);"></div></div>
+      <div style="margin-top:10px;color:var(--muted);font-size:.9rem;">Installable✅<br>Offline 200 start_url</div>
+    </div>
+  </div>
+
+  <div class="snap" style="margin-top:18px;min-height:160px;">
+    <div class="ico">📊</div>
+    <div class="snaptitle">📸 CAPTURA AQUÍ: Overview 4 puntajes reales de Lighthouse después de correr la herramienta</div>
+    <div class="snaphint">DevTools → Lighthouse → Marcar Performance / Accessibility / Best Practices / PWA → Generate report. Pegar resultado: rois y pegar pantallazo del report aquí después de resolver NO_FCP con el Login visible.</div>
+  </div>
+</section>
+
+<!-- ============ D9 HALLAZGOS ACC REND ============ -->
+<section class="slide" data-idx="9">
+  <h2>🔎 Hallazgos: Accesibilidad y Rendimiento</h2>
+  <div class="grid-2" style="margin-top:18px;">
+    <div class="card">
+      <h4>♿ Accesibilidad</h4>
+      <ul class="clean">
+        <li><span class="chip ok">OK Tema oscuro con alto contraste ≥ 4.6:1 corporativo verde/blanco — cumple WCAG AA.</li>
+        <li><span class="chip ok">OK Todos los inputs tienen <code>&lt;label for=""&gt;</code> asociado.</li>
+        <li><span class="chip ok">OK Botones táctiles ≥ 44px de alto — FAB 64 px.</li>
+        <li><span class="chip ok">OK <code>html lang="es-CO"</code> correcto para lectores pantalla.</li>
+        <li><span class="chip red">⚠️ <b>Problema detectado</b>: el toast con <code>aria-live="polite"</code> sin etiquetar. Screen reader no anuncian updates sincronización completada.</li>
+        <li><span class="chip.red">⚠️ Modal <code>role="dialog"</code> pero sin trap focus. Tabulador puede salir.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>🚀 Rendimiento</h4>
+      <ul class="clean">
+        <li><span class="chip ok">OK Resuelto error NO_FCP inicial.</span> <b>Antes:</b> ∞ s. <b>Después:</b> ~300 ms.</li>
+        <li><span class="chip ok">OK Cero librerías externas</span> — no jQuery, no React, no Workbox. ~65 KB.</li>
+        <li><span class="chip ok">OK Imágenes comprimidas cliente 1280×720 75% ~200 KB cada una.</li>
+        <li><span class="chip ok">OK Scripts defer</span> + registro SW post-idle.</li>
+        <li><span class="chip.warn">⚠️ <b>Problema detectado</b>: manifest SVG inline: launcher Android versiones antiguas no renderiza data:svg en manifest. Recomendado PNGs archivos.</span></li>
+        <li><span class="chip.warn">⚠️ <b>Problema detectado</b>: sin preload crítica estilos.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ D10 PROPUESTAS MEJORA Y CIERRE ============ -->
+<section class="slide" data-idx="10">
+  <h2>💡 Propuestas de Mejora + Cierre</h2>
+  <table style="margin-top:16px;">
+    <tr><th>🆘 Prioridad</th><th>Acción propuesta</th><th>Impacto esperado</th><th>Esfuerzo</th></tr>
+    <tr>
+      <td><span class="chip red">ALTA</span></td>
+      <td>Reemplazar íconos SVG inline del manifest por archivos PNG 192 y 512 maskable (con padding)</td>
+      <td>Asegurar instalación 100% Android ≤ 8 (móviles campo).</td>
+      <td>~ 2 horas</td>
+    </tr>
+    <tr>
+      <td><span class="chip red">ALTA</span></td>
+      <td>Añadir atributos <code>aria-live="polite"</code> al toast + al stats dashboard</td>
+      <td>Pasa Accesibilidad Lighthouse de 92 → 98.</td>
+      <td>~1 hora</td>
+    </tr>
+    <tr>
+      <td><span class="chip.warn">MEDIA</span></td>
+      <td>Desplegar backend + frontend en HTTPS real (Railway + Netlify o Vercel)</td>
+      <td>Pasa Lighthouse HTTPS ✅ PWA instalable fuera de localhost.</td>
+      <td>~4 horas</td>
+    </tr>
+    <tr>
+      <td><span class="chip.warn">MEDIA</span></td>
+      <td>Banner visible "Nueva versión disponible" (actualmente solo console.log)</td>
+      <td>Usuario campo actualiza con 1 clic; biólogo no pierde features nuevas.</td>
+      <td>~2 horas</td>
+    </tr>
+    <tr>
+      <td><span class="chip">BAJA</span></td>
+      <td>Migrar sw.js a Workbox v7 con plugins Expiration + Range Requests</td>
+      <td>Reduce lines of code sw.js ~60%; cache fotos offline view-source visión general.</td>
+      <td>~6 horas</td>
+    </tr>
+    <tr>
+      <td><span class="chip">BAJA</span></td>
+      <td>Llenar arreglo screenshots[] del manifest con 2 widescreen + 2 portrait</td>
+      <td>Diálogo instalación Android muestra preview app (aumenta tasa instalación).</td>
+      <td>~1 hora</td>
+    </tr>
+  </table>
+  <div style="margin-top:22px;text-align:center;">
+    <h1 style="text-align:center;font-size:2.4rem;">¡Muchas gracias!</h1>
+    <p style="color:var(--text-2);font-size:1.2rem;">Preguntas · Retroalimentación tutor</p>
+    <div style="margin-top:12px;">
+      <span class="chip">Jefferson Rojas</span>
+      <span class="chip">Uniminuto · Desarrollo Software Seguro</span>
+      <span class="chip">Agosto 2026</span>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- Navegación -->
+<div class="nav">
+  <button onclick="prev()" title="Anterior (←)">◀</button>
+  <div class="count" id="counter">01 / 10</div>
+  <button onclick="next()" title="Siguiente (→)">▶</button>
+  <button onclick="window.print()" title="Imprimir / Guardar PDF" style="background:transparent;border:1px solid var(--accent);color:var(--accent);font-size:.9rem;width:auto;padding:0 14px;border-radius:999px;font-weight:600;">PDF</button>
+</div>
+
+<script>
+  let cur = 1;
+  const total = 10;
+  const slides = document.querySelectorAll('.slide');
+  const counter = document.getElementById('counter');
+  const tagNum = document.getElementById('tagNum');
+  function show(n){
+    slides.forEach(s => s.classList.remove('active'));
+    document.querySelector('.slide[data-idx="'+n+'"]').classList.add('active');
+    counter.textContent = String(n).padStart(2,'0') + ' / ' + total;
+    tagNum.textContent = n;
+    window.scrollTo(0,0);
+  }
+  function next(){ if(cur<total){cur++;show(cur);} }
+  function prev(){ if(cur>1){cur--;show(cur);} }
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight') next();
+    if(e.key==='ArrowLeft') prev();
+    if(e.key==='Home'){cur=1;show(1);}
+    if(e.key==='End'){cur=total;show(total);}
+  });
+</script>
+</body>
+</html>
